@@ -1,0 +1,50 @@
+#!bin/bash/
+#Author: Cody Coleman
+
+# sizes takes, as arguments, at least one limit file, as described below.                 
+
+#     First line will be one of:
+#         -an absolute path starting with /
+#         -an absolute path starting with ~username
+#         -a username, indicating to check that user’s home directory. 
+#     Subsequent lines will be one of, in no particular order (at least one needs to be present):
+#         -t>value (indicating a minimum total size, in bytes, of all plain files)
+#         -t<value (indicating a maximum total size, in bytes, of all plain files)
+#         -n>value (indicating a minimum number of plain files)
+#         -n<value (indicating a maximum number of plain files) 
+#     A value will be one of these appallingly non-standard forms:
+#         -a simple integer
+#         -integer D
+#         -integer S
+#         -integer H
+#         -integer M
+#         -integer B
+#         -D, S, H, M, and B mean exactly 12, 20, 10², 10⁶, and 10⁹.
+#         -Either upper or lower case is acceptable. 
+#     For example, n<3h means that the number of plain files must be less than three hundred.
+#     Similarly, t>23M means that the total size of all plain files must be greater than 23 000 000.
+#     Empty lines in the limit file are ignored.
+#     Comment lines beginning with # in the first column are ignored. 
+
+    # -Comment & empty lines may be anywhere in the limit file, even before the “first” line.
+    # -No matter what style the first line of the limit file takes, the message for exceeding a limit must start with an absolute directory.
+    # -The message for exceeding a limit must include the size in its original form, e.g., 12398M, not 12398000000
+    # -File sizes and total sizes may be up to one trillion bytes.
+    # -Produce multiple messages if multiple constraints are violated.
+    # -Produce an error message to stderr, containing the real program name, and terminate, if:
+    #     no arguments are given
+    #     non-existent user in a limit file
+    #     bad directory in a limit file
+    #     a limit file is bad in any other way, including being syntactically incorrect, not existing, being unreadable, etc. 
+    # -A “plain file” is a plain old data file. It is not a:
+    #     directory
+    #     symbolic link
+    #     socket
+    #     named pipe
+    #     etc. 
+    # -Ignore all non-plain files, including symbolic links.
+    # -The number & total refer to all plain files in the directory hierarcy, including files in subdirectories, sub-sub-directories, etc.
+    # -You may not use any existing limit program, such as quota or quot. In general, you may not use any program that solves the majority of the assignment for you.
+    # -You may use the du, ls, and find programs. 
+
+     

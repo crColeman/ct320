@@ -54,13 +54,31 @@ function parseFile() {
         then
             raw_file_contents+=( "$line" )
         fi
-
+        
     done < "$1"
     firstLine ${raw_file_contents[0]}
     
     for line in ${raw_file_contents[@]};
     do
-        echo $line
+        regex_max_size='^\bt<\b[0-9]+[DdSsHhMmBb]{1}$'
+        regex_min_size='^\bt>\b[0-9]+[DdSsHhMmBb]{1}$'
+        regex_max_files='^\bn<\b[0-9]+[DdSsHhMmBb]{1}$'
+        regex_min_files='^\bn>\b[0-9]+[DdSsHhMmBb]{1}$'
+        if [[ $line =~ $regex_max_size ]]
+        then 
+            #echo $line;
+            echo max size
+
+        elif [[ $line =~ $regex_min_size ]]
+        then
+            echo min size
+        elif [[ $line =~ $regex_max_files ]]
+        then
+            echo max files
+        elif [[ $line =~ $regex_min_files ]]
+        then 
+            echo min files
+        fi
     done
 }
 
@@ -74,15 +92,19 @@ function firstLine() {
             echo $ARG: Not A Valid Directory
         else
             echo Directory
+            return
         fi
     fi
     if id ${ARG:1:4} >/dev/null 2>&1
     then
         echo "User Exists"
+        return
     else
         echo "No User"
     fi
 }
+
+
 declare -a file_names_array
 
 if [[ $# < 1 ]]
@@ -94,21 +116,27 @@ else
     index=0
     declare -a total_size
     declare -a num_files
-   
+    
     for file in $@;
     do
-        
         file_names_array[$index]=$file
         let "index=$(($index+1))"
     done
-
-
-
+    
+    
+    
     for fileName in ${file_names_array[@]};
     do
         declare -a total_size
         declare -a num_files
-        parseFile "file"
+        max_file_size=0
+        min_file_size=0
+        max_num_files=0
+        min_num_files=0
+        absolute_path=""
+        
+        
+        parseFile $fileName
         
     done
 fi

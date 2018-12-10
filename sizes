@@ -57,59 +57,227 @@ function parseFile() {
         
     done < "$1"
     firstLine ${raw_file_contents[0]}
+    unset raw_file_contents[0]
     
     for line in ${raw_file_contents[@]};
     do
-        regex_max_size='^\bt<\b[0-9]+[DdSsHhMmBb]{1}$'
-        regex_min_size='^\bt>\b[0-9]+[DdSsHhMmBb]{1}$'
-        regex_max_files='^\bn<\b[0-9]+[DdSsHhMmBb]{1}$'
-        regex_min_files='^\bn>\b[0-9]+[DdSsHhMmBb]{1}$'
+        
+        local regex_max_size='^\bt<\b[0-9]+[DdSsHhMmBb]{1}$'
+        local regex_min_size='^\bt>\b[0-9]+[DdSsHhMmBb]{1}$'
+        local regex_raw_max_files='^\bn<\b[0-9]+[DdSsHhMmBb]{1}$'
+        local regex_raw_min_files='^\bn>\b[0-9]+[DdSsHhMmBb]{1}$'
+        local line_Value="$(echo $line | tr -cd '[[:digit:]]' )"
+        local multiplyer="${line: -1}"
+        
         if [[ $line =~ $regex_max_size ]]
-        then 
+        then
             #echo $line;
-            echo max size
-
+            raw_max_file_size=$line_Value
+            raw_max_file_size_multiplyer=$multiplyer
+            
+            
+            
         elif [[ $line =~ $regex_min_size ]]
         then
-            echo min size
-        elif [[ $line =~ $regex_max_files ]]
+            raw_min_file_size=$line_Value
+            raw_min_file_size_multiplyer=$multiplyer
+            
+        elif [[ $line =~ $regex_raw_max_files ]]
         then
-            echo max files
-        elif [[ $line =~ $regex_min_files ]]
-        then 
-            echo min files
+            raw_max_num_files=$line_Value
+            raw_max_num_files_multiplyer=$multiplyer
+            
+        elif [[ $line =~ $regex_raw_min_files ]]
+        then
+            raw_min_num_files=$line_Value
+            raw_min_num_files_multiplyer=$multiplyer
+        else
+            echo "Error: Invalid Limit Requirement: $line: $0" >&2
+            exit 1
         fi
     done
 }
 
+
 function firstLine() {
     local ARG="$1"
     # echo $ARG
+    username_regex='^\b~\b*[^/]$'
+    if id $ARG >/dev/null 2>&1
+    then
+        absolute_path="/home/$ARG"
+        return
+    elif [[ "${ARG:0:2}" == ~[/a-z] ]]
+    then
+        raw_username="$(echo "$ARG" | cut -d'/' -f1 )"
+        clean_username="${raw_username:1}"
+        
+        if id $clean_username >/dev/null 2>&1
+        then
+            clean_username="/home/$clean_username"
+            path=${ARG#$raw_username/}
+            if [[ -d "$clean_username/$path" ]]
+            then
+                absolute_path=$clean_username/$path
+                return
+            fi
+        else
+            echo "Error: Invalid Username: $0" >&2
+            exit 1
+        fi
+        
+    fi
     if [[ "${ARG:0:1}" == /* || "${ARG:0:2}" == ~[/a-z] ]]
     then
-        if ! [[ -d "$ARG" ]];
+        if [[ -d "$ARG" ]];
         then
-            echo $ARG: Not A Valid Directory
-        else
-            echo Directory
+            absolute_path=$ARG;
             return
+        else
+            echo "$ARG: Not A Valid Directory" >&2
+            exit 1
         fi
     fi
-    if id ${ARG:1:4} >/dev/null 2>&1
-    then
-        echo "User Exists"
-        return
-    else
-        echo "No User"
-    fi
+    
 }
 
+function directoryEnforcement() {
+    let x=0
+}
+
+multiplyerProduct() {
+    
+    case "$1" in
+        [Dd] )
+        ;;
+        [Ss] )
+        ;;
+        [Hh] )
+        ;;
+        [Mm] )
+        ;;
+        [Bb] )
+        ;;
+        *)
+            # echo "Error: Invalid Limit Requirement: $line: $0" >&2
+            # exit 1
+    esac
+}
+
+function multipleCalculations {
+    local multiplyer=0
+    if [[ "$raw_max_file_size_multiplyer" != "" ]]
+    then
+        case $raw_max_file_size_multiplyer in
+            [Dd] )
+                multiplyer=12
+            ;;
+            [Ss] )
+                multiplyer=20
+            ;;
+            [Hh] )
+                multiplyer=100
+            ;;
+            [Mm] )
+                let multiplyer=10**6
+            ;;
+            [Bb] )
+                let multiplyer=10**9
+            ;;
+            *)
+                echo "Error: Invalid Limit Requirement: $line: $0" >&2
+                exit 1
+        esac
+        let final_max_file_size=($raw_max_file_size*multiplyer);
+        echo $final_max_file_size
+    fi
+    
+    if [[ "$raw_min_file_size_multiplyer" != "" ]]
+    then
+        case $raw_min_file_size_multiplyer in
+            [Dd] )
+                multiplyer=12
+            ;;
+            [Ss] )
+                multiplyer=20
+            ;;
+            [Hh] )
+                multiplyer=100
+            ;;
+            [Mm] )
+                let multiplyer=10**6
+            ;;
+            [Bb] )
+                let multiplyer=10**9
+            ;;
+            *)
+                echo "Error: Invalid Limit Requirement: $line: $0" >&2
+                exit 1
+        esac
+        let final_min_file_size=($raw_min_file_size*multiplyer);
+        echo $final_min_file_size
+    fi
+    
+    if [[ "$raw_max_num_files_multiplyer" != "" ]]
+    then
+        case $raw_max_num_files_multiplyer in
+            [Dd] )
+                multiplyer=12
+            ;;
+            [Ss] )
+                multiplyer=20
+            ;;
+            [Hh] )
+                multiplyer=100
+            ;;
+            [Mm] )
+                let multiplyer=10**6
+            ;;
+            [Bb] )
+                let multiplyer=10**9
+            ;;
+            *)
+                echo "Error: Invalid Limit Requirement: $line: $0" >&2
+                exit 1
+        esac
+        let final_max_num_files=($raw_max_num_files*multiplyer);
+        echo $final_max_num_files
+    fi
+    
+    if [[ "$raw_min_num_files_multiplyer" != "" ]]
+    then
+        case $raw_min_num_files_multiplyer in
+            [Dd] )
+                multiplyer=12
+            ;;
+            [Ss] )
+                multiplyer=20
+            ;;
+            [Hh] )
+                multiplyer=100
+            ;;
+            [Mm] )
+                let multiplyer=10**6
+            ;;
+            [Bb] )
+                let multiplyer=10**9
+            ;;
+            *)
+                echo "Error: Invalid Limit Requirement: $line: $0" >&2
+                exit 1
+        esac
+        let final_min_num_files=($raw_min_num_files*multiplyer);
+        
+    fi
+    
+}
 
 declare -a file_names_array
 
 if [[ $# < 1 ]]
 then
-    echo "No File Argument Passed $0\n" >&2
+    echo "Error: No File Argument Passed: $0" >&2
+    exit 1
 else
     #Error checking goes here
     
@@ -127,16 +295,45 @@ else
     
     for fileName in ${file_names_array[@]};
     do
-        declare -a total_size
-        declare -a num_files
-        max_file_size=0
-        min_file_size=0
-        max_num_files=0
-        min_num_files=0
+        raw_max_file_size=0pathnames
+        raw_max_file_size_mpathnamesr=""
+        raw_min_file_size=0pathnames
+        raw_min_file_size_mpathnamesr=""
+        raw_max_num_files=0pathnames
+        raw_max_num_files_multiplyer=""
+        raw_min_num_files=0
+        raw_min_num_files_multiplyer=""
         absolute_path=""
+        final_max_file_size=0
+        final_min_file_size=0
+        final_max_num_files=0
+        final_min_num_files=0
         
         
         parseFile $fileName
+        echo $absolute_path
+        echo Max File Size: $raw_max_file_size
+        echo Max File Multiplyer: $raw_max_file_size_multiplyer
+        echo Min File Size: $raw_min_file_size
+        echo Min File Multiplyer: $raw_min_file_size_multiplyer
+        echo Max Number of Files: $raw_max_num_files
+        echo Max Number of Files Multiplyer: $raw_max_num_files_multiplyer
+        echo min Number of Files: $raw_min_num_files
+        # echo Min Num of Files Multiplyer: $raw_min_num_files_multiplyer
+        multipleCalculations
+        cd $absolute_path
+        echo here
+       yourfilenames=`find -type f -not -name ".*" -printf '%P\n'`
+        echo here
+        for eachfile in $yourfilenames
+        do
+
+             size=`du "$eachfile" | cut -f1`
+             echo $size
+        done
+        
+        
+        
         
     done
 fi

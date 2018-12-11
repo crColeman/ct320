@@ -188,8 +188,8 @@ function multipleCalculations {
                 echo "Error: Invalid Limit Requirement: $line: $0" >&2
                 exit 1
         esac
-        let final_max_file_size=($raw_max_file_size*multiplyer);
-        echo $final_max_file_size
+        let final_max_file_size=($raw_max_file_size*$multiplyer);
+        unset multiplyer
     fi
     
     if [[ "$raw_min_file_size_multiplyer" != "" ]]
@@ -214,8 +214,8 @@ function multipleCalculations {
                 echo "Error: Invalid Limit Requirement: $line: $0" >&2
                 exit 1
         esac
-        let final_min_file_size=($raw_min_file_size*multiplyer);
-        echo $final_min_file_size
+        let final_min_file_size=($raw_min_file_size*$multiplyer);
+        unset multiplyer
     fi
     
     if [[ "$raw_max_num_files_multiplyer" != "" ]]
@@ -240,8 +240,8 @@ function multipleCalculations {
                 echo "Error: Invalid Limit Requirement: $line: $0" >&2
                 exit 1
         esac
-        let final_max_num_files=($raw_max_num_files*multiplyer);
-        echo $final_max_num_files
+        let final_max_num_files=($raw_max_num_files*$multiplyer);
+        unset multiplyer
     fi
     
     if [[ "$raw_min_num_files_multiplyer" != "" ]]
@@ -266,8 +266,8 @@ function multipleCalculations {
                 echo "Error: Invalid Limit Requirement: $line: $0" >&2
                 exit 1
         esac
-        let final_min_num_files=($raw_min_num_files*multiplyer);
-        
+        let final_min_num_files=($raw_min_num_files*$multiplyer);
+        unset multiplyer
     fi
     
 }
@@ -279,27 +279,23 @@ then
     echo "Error: No File Argument Passed: $0" >&2
     exit 1
 else
-    #Error checking goes here
-    
+
     index=0
-    declare -a total_size
-    declare -a num_files
-    
     for file in $@;
     do
         file_names_array[$index]=$file
-        let "index=$(($index+1))"
+        let index+=1
     done
     
     
     
     for fileName in ${file_names_array[@]};
     do
-        raw_max_file_size=0pathnames
-        raw_max_file_size_mpathnamesr=""
-        raw_min_file_size=0pathnames
-        raw_min_file_size_mpathnamesr=""
-        raw_max_num_files=0pathnames
+        raw_max_file_size=0
+        raw_max_file_size_multiplyer=""
+        raw_min_file_size=0
+        raw_min_file_size_multiplyer=""
+        raw_max_num_files=0
         raw_max_num_files_multiplyer=""
         raw_min_num_files=0
         raw_min_num_files_multiplyer=""
@@ -311,28 +307,54 @@ else
         
         
         parseFile $fileName
-        echo $absolute_path
-        echo Max File Size: $raw_max_file_size
-        echo Max File Multiplyer: $raw_max_file_size_multiplyer
-        echo Min File Size: $raw_min_file_size
-        echo Min File Multiplyer: $raw_min_file_size_multiplyer
-        echo Max Number of Files: $raw_max_num_files
-        echo Max Number of Files Multiplyer: $raw_max_num_files_multiplyer
-        echo min Number of Files: $raw_min_num_files
-        # echo Min Num of Files Multiplyer: $raw_min_num_files_multiplyer
         multipleCalculations
         cd $absolute_path
-        echo here
-       yourfilenames=`find -type f -not -name ".*" -printf '%P\n'`
-        echo here
+        yourfilenames=`find -type f -not -name ".*" -printf '%P\n'`
+        count=0
+        total_size=0
         for eachfile in $yourfilenames
         do
-
-             size=`du "$eachfile" | cut -f1`
-             echo $size
+            let count+=1
+            current_size="$(du -b "$eachfile" 2>/dev/null | cut -f1)"
+            let total_size+=$(($current_size))
+            
         done
-        
-        
+
+        if [[ $total_size -gt $final_max_file_size ]]
+        then
+            echo "$absolute_path: total maximum of $raw_max_file_size$raw_max_file_size_multiplyer violated" >&2
+        fi
+        if [[ $total_size -lt $final_min_file_size ]]
+        then
+            echo "$absolute_path: total minimum of $raw_min_file_size$raw_min_file_size_multiplyer violated" >&2
+        fi
+
+        if [[ $count -gt $final_max_num_files ]]
+        then
+            echo "$absolute_path: number maximum of $raw_max_num_files$raw_max_num_files_multiplyer violated" >&2
+        fi
+        if [[ $count -lt $final_min_num_files ]]
+        then
+            echo "$absolute_path: number minimum of $raw_min_num_files$raw_min_num_files_multiplyer violated" >&2
+        fi
+
+
+
+        unset count
+        unset total_size
+        unset final_max_file_size
+        unset final_min_file_size
+        unset final_max_num_files
+        unset final_min_num_files
+        unset raw_max_file_size
+        unset raw_max_file_size_multiplyer
+        unset raw_min_file_size
+        unset raw_min_file_size_multiplyer
+        unset raw_max_num_files
+        unset raw_max_num_files_multiplyer
+        unset raw_min_num_files
+        unset raw_min_num_files_multiplyer
+        unset absolute_path
         
         
     done

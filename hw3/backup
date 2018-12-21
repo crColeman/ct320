@@ -1,0 +1,67 @@
+#!/bin/bash
+
+userNames=$(ls $2)
+home=("$2")
+destDir=$3
+
+if [[ $# != 3 ]]
+then
+    echo "Wrong Number Of Arguments " + $0 >> stderr;
+elif [[ $1 == -S ]]
+then
+    if ! [[ -d $destDir ]]
+    then
+        mkdir $destDir
+    fi
+    for i in $userNames;
+    do
+        if [[ -d $home/$i ]]
+        then
+            cd $home
+            tar -cvzPf $destDir/$i.tgz $i
+            dir=$(tar -tvPf $destDir/$i.tgz | grep -c ^d)
+            nondir=$(tar -tvPf $destDir/$i.tgz | grep -c ^-)
+            size=$(du --apparent-size -h $destDir/$i.tgz | grep -Eo '[[:digit:]]{1,}')
+            echo "$i,$home/$i,$(date +%s),$nondir,$dir,$size" >> $destDir/backups-here
+        else
+            echo "Could Not Access $home/$i: " +$0 >> stderr
+        fi
+    done
+    
+elif [[ $1 == -R ]]
+then
+
+    for i in $userNames;
+    do 
+        
+        
+           backup=$(cat $destDir/backups-here | grep -wE "^\\$i," )
+        if [[ backup > 0 ]]
+        then
+           
+            if ! [[ -d /tmp/workdir ]]
+            then
+                mkdir /tmp/workdir
+                chmod 777 /tmp/workdir
+            fi
+            tar -xvzPf $destDir/$i.tgz -C /tmp/workdir/
+            cd /tmp/workdir
+            missFile=$(diff -qr $i/ $home/$i/ | cut -d ' ' -f 4)
+            difDir=$(diff -qr $i/ $home/$i/ | cut -d ' ' -f 3,4 | cut -d '/' -f 1) 
+            compare="$i"
+            if [[ "$difDir" == "$compare" ]]
+            then
+                cp -r $i/$missFile $home/$difDir
+            fi
+        else
+            echo "Nothing available for $i" >> stderr
+
+        fi
+    done
+    if [[ -d /tmp/workdir ]]
+    then
+        rm -r /tmp/workdir
+    fi
+else
+    echo "Incorrect First Argument +$0" >> stderr
+fi

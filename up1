@@ -1,0 +1,134 @@
+#! /usr/bin/perl -w
+use strict;
+use warnings;
+use 5.16.1;
+use Net::Ping;
+use Getopt::Std;
+
+#Cody Coleman; crcolema@rams.colostate.edu
+#CT320 HW4: You up?
+# The purpose of this assignment is to have an easy way to verify that a remote system is “up” (responds to pings). 
+# The command is designed so that you can use it from cron. It is not much more than a thin veneer around ping.                 
+
+# You give it a hostname, and it pings the host. It displays the hostname, followed by how many ping packets came back, 
+# followed by how many ping packets were sent.                 
+
+##########################################################################
+# Arguments                
+# The script takes two optional arguments and a mandatory single hostname:                 
+
+# -s: be silent. If all ping packets succeeded, display nothing.
+# -p count: How many packets to send (see ping -c).
+
+##########################################################################
+# Examples                
+# In these sample runs, our computer denver.cs.colostate.edu responds to pings, but hp.com doesn’t. “$” is my shell prompt:                 
+
+#     $ ./up denver.cs.colostate.edu
+#     denver.cs.colostate.edu: 3/3
+#     $ ./up -p1 denver.cs.colostate.edu
+#     denver.cs.colostate.edu: 1/1
+#     $ ./up -p2 -s denver.cs.colostate.edu
+#     $ ./up hp.com
+#     hp.com: 0/3
+#     $ ./up -s -p 10 hp.com
+#     hp.com: 0/10
+#     $ ./up 192.0.2.12
+#     192.0.2.12: 0/3                
+############################################################################
+
+# Debugging                
+# If you encounter “STACK FRAME LINK OVERFLOW”, then try this:
+
+#     export STACK_FRAME_LINK_OVERRIDE=127b-e534a3998c134946ade7193ef482d0c7
+#############################################################################
+# Requirements                
+# -We will test your program on a computer configured similarly to the ones in the CSB 120 Linux Lab.
+# -Name your script simply “up”, not up.txt, up.pl, or up.perl.
+# -The first line of your script must start with: #! /usr/bin/perl
+# -You may not use any external programs, other than ping.
+# -The space between -p and count is optional. However, nothing else can be between them.
+# -The options may come in any order. The hostname must be last.
+# -Any error message must go to standard error, and stop the program—no more output.
+# -Any syntactic error in the arguments or options should produce a usage message to standard error, 
+#  include the name of the program, as invoked, which briefly describes how to correctly use the command.
+# -If the host can’t be found, produce an error message.
+# -Your output must match the example output shown above. This is not the place for creativity.
+# -Don’t produce any extra output. It is not an adequate defense to say “The ping command produced 
+#  that; it’s not my fault."
+
+
+getopts('sp:');
+# Default host to use;
+my $host;# = "denver.cs.colostate.edu";
+my $silent=0;
+# perform the ping
+my $op1=".";
+my $op2=".";
+my $numArgs = $#ARGV+1;
+my $count = 3; #default number of pings
+
+
+if($numArgs > 1) {
+        $op1 = $ARGV[0];
+        chomp($op1);
+        if($op1 eq "-p"){
+                $count = $ARGV[1];
+                if($numArgs == 3){
+                        $host = $ARGV[2];
+                }elsif($numArgs == 4){
+                        $op2 = $ARGV[2];
+                        if($op2 eq '-s'){
+                            $silent = 1;
+                        }
+                        $host = $ARGV[3];
+                }else{
+                     say STDERR "Incorrect number of Arguments Passed";
+                                die;   
+                }
+        }
+        if($op1 eq "-s"){
+            $silent=1;
+                if($numArgs == 2){
+                        $host = $ARGV[1];
+                }elsif($numArgs == 3){
+                        say STDERR "Incorrect number of Arguments Passed";
+                                die;
+                }elsif($numArgs == 4){
+                        if($op2 eq '-p'){
+                                $count = $ARGV[3];
+                                $host = $ARGV[4];
+                        }else{
+                                $host = $ARGV[3];
+                        }
+                }else{
+                        say STDERR "Incorrect number of Arguments Passed";
+                        die;
+                }
+        }
+}elsif($numArgs <=0 || $numArgs >=4){
+        say STDERR "Incorrect Number of Arguments Passed";
+        die;
+}else{
+        $host = $ARGV[0];
+}
+
+
+my $p = Net::Ping->new();
+
+my $time = 0;
+my $returned = 0;
+foreach my $c (1 .. $count) {
+    my ($ret, $duration, $ip) = $p->ping($host);
+    if ($ret) {
+        $returned++;
+        $time += $duration;
+    }
+}
+unless($silent){
+                say $host.": ".$returned."/".$count;
+        }
+        if($silent && ($count != $returned)){
+                say $host.": ".$returned."/".$count;
+        } 
+

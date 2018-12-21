@@ -1,0 +1,68 @@
+#!/bin/bash
+
+if [[ $# < 1 ]]
+then
+    echo "Arguments are Invalid $0" >&2
+else
+    
+    
+    if ! [[ -d ~/.observe ]]
+    then
+        mkdir ~/.observe
+    fi
+    if ! [[ -f ~/.observe/commandHistory ]]
+    then
+        echo $bashCommand >>~/.observe/commandHistory
+    fi
+    if [[ $1 == "--debug" ]]
+    then
+        echo "DEBUG"
+        shift
+    fi
+    if [[ $# == 1 ]]
+    then
+        if [[ $1 == "--commands" ]]
+        then
+            if [[ -d ~/.observe ]]
+            then
+                cat ~/.observe/commandHistory
+            fi
+            exit
+        fi
+    fi
+    
+    bashCommand="$@"
+    eval $bashCommand >>~/.observe/tmpOutput
+    command=($bashCommand)
+    commandName="${command[@]:0:1}"
+    
+    
+    if grep -q -x "$bashCommand" ~/.observe/commandHistory
+    then
+        
+        if [[ -d ~/.observe/$commandName ]]  #If main command directory exists
+        then
+            
+            for filename in ~/.observe/$commandName/*          #loop through each file
+            do
+                if ! diff -q -c $filename ~/.observe/tmpOutput 1> /dev/null
+                then
+                    diff -q -c $filename ~/.observe/tmpOutput
+                    rm $filename
+                    cat ~/.observe/tmpOutput >$filename
+                fi
+            done
+        else
+            
+            mkdir ~/.observe/$commandName
+            temp="$(mktemp ~/.observe/$commandName/XXXX)"
+            cp ~/.observe/tmpOutput $temp
+            
+            
+        fi
+    else
+        echo $bashCommand >>~/.observe/commandHistory
+    fi
+    rm ~/.observe/tmpOutput
+    
+fi

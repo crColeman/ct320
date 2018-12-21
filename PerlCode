@@ -1,0 +1,221 @@
+#! /usr/bin/perl -w
+use 5.16.1;
+#Cody Coleman, crcolema@rams.colostate.edu
+#17 Oct, 2018 T
+#CT320: Perl Programming Lab
+
+print "What is your name?";
+my $name = <STDIN>;
+chomp $name;
+print "Hello, $name!";
+print "\n";
+
+# Part 2
+my $one=1;
+my $two=20;
+my $three=13;
+
+my $dec1=1.1;
+my $dec2=2.2;
+my $dec3=3.3;
+
+print "\nInteger Arithmetic:\n";
+say "$one*$two=".$one*$two;
+say "$two*$three=".$two*$three;
+say "$two+$three=".$two+$three;
+
+print "\nFloating Point Arithmetic:\n";
+say "$dec1*$two=".$dec1*$two;
+say "$dec3*$dec2=".$dec3*$dec2;
+say "$dec3+$dec2=".($dec3+$dec2);
+
+
+say "\nMixed Arithmetic:";
+say "$dec3*$two=".$dec3*$two;
+say "$dec2+$three=".($dec2+$three);
+say "$dec3**$two=".($dec3**$two);
+
+
+my $fiveS="five";
+my $longS="LONGstring";
+my $vlS="aVeryLongString";
+
+say "\nString Manipulation";
+say $fiveS.$longS;
+say $fiveS x 5;
+say $longS x 5;
+
+#say ($fiveS==$fiveS);
+print "String compare: $fiveS eq $fiveS = ";
+if( $fiveS eq $fiveS){
+    say "TRUE";
+}else{
+    say "FALSE";
+}
+
+print "$longS gt $fiveS = ";
+if($longS gt $fiveS){
+    say "TRUE";
+}else{
+    say "FALSE";
+}
+
+my $hex = 0x1234;
+my $bin = 0b0011;
+say "$hex << 2 = ".($hex << 2);
+say "$bin  >> 1 = ".($bin >> 1);
+say "$bin & ($bin << 1) = ".($bin & ($bin << 1));
+say "$hex | ($hex >> 2) = ".($hex | ($hex >> 2));
+say "$bin^($bin << 1) = ".($bin^($bin << 1));
+
+
+#PART 3
+# Add a comment line that shows the start of Part 3.
+
+# Create an array with eight integer values.
+my @arr = (1,2,4,8,16,32,64,128);
+
+# Create an array with eight string values.
+my @strArr = ("one", "two", "three", "four", "five", "six", "seven", "eight");
+
+# Can you create an array in Perl with both integer and strings?
+#yes but the array treats all of the elements as type scalar??
+my @mixArr = ("one", 1, "two", 2);
+foreach my $i(0 .. $#mixArr){
+    say $mixArr[$i];
+}   #####Treats the elements as scalar type?
+
+# Show how array access works by printing the third element of both arrays. (Which one is the third element, again?)
+say "Int Array: 3rd Element: ".$arr[2];
+say "String Array: 3rd Element: ".$strArr[2];
+
+# Print the size of both arrays.
+say "Int Array: Size: ".$#arr;
+say "String Array: Size: ".$#strArr;
+
+# Push an entry onto both arrays.
+push @arr, 3;
+push @strArr, "push";
+
+# Print the size of the arrays again.
+say "Int Array: Size: ".$#arr;
+say "String Array: Size: ".$#strArr;
+
+# Pop an entry from both arrays into a scalar.
+my $intPop = pop @arr;
+my$strPop = pop @strArr;
+
+
+# Print the size of the arrays again.
+say "Int Array: Size: ".$#arr;
+say "String Array: Size: ".$#strArr;
+
+# Create another array with three strings and add it to the string array.
+my @threeStr = ("a ", "new ", "array.");
+push @strArr, @threeStr;
+say @strArr;
+
+# How do you delete the third entry in the integer and string arrays? Hint: Look at the splice function in Perl.
+splice @arr, 2, 1;
+say @arr;
+
+#PART 4
+# Add a comment line that shows the start of Part 4.
+
+# To demonstrate loop structures, print out some value from the arrays in Part 3.
+say $arr[2];
+# Show loop structures (for/foreach, while, until).
+foreach my $i(0 .. $#arr){
+    say $arr[$i];
+}
+
+my $count=0;
+while($count < $#strArr){
+    say $strArr[$count];
+    $count++;
+}
+$count = 0;
+
+until($count == $#arr){
+    say $arr[$count];
+    $count++;
+}
+
+# What’s the difference between for and foreach?
+##They can be used interchangeably. 
+
+# Show the difference between C-style and Perl-style for loops.
+for (my $i=0; ($i <$#arr); $i++){
+
+}
+
+foreach my $i(0 .. $#arr){
+
+}
+# Show an if/else and if/elsif/else conditional and the same for unless.
+if($arr[0] == 1){
+    say "Element 0 = 1";
+}else{
+    say "Element 0 != 1";
+}
+
+if($arr[1] == $arr[0]){
+    say "Element 1 == Element 2";
+}elsif($arr[1] == $arr[2]){
+    say "Element 2 == Element 3";
+}else{
+    say "First three elements are unique";
+}
+
+ unless($arr[0] != 1){
+    say "Element 1 == 1";
+}else{
+    say "Element 1 != 1";
+}
+
+
+#Part 5
+# Add a comment line that shows the start of Part 5.
+
+# Create a file by redirecting a manpage, e.g.: man strfry > strfry.man
+`man ls > ./ls.man`;
+# Open (read) the strfry.man file into an array of lines.
+open(my $file, '<:encoding(UTF-8)', "ls.man")
+  or die "Could not open file 'ls.man'";
+my @lsArr;
+while (my $row = <$file>) {
+  chomp $row;
+  push @lsArr, $row;
+
+}
+
+# Open (write) a file called strfry.man.bak and write the array of lines.
+open(my $file2, '>:encoding(UTF-8)', "ls.man.bak")
+  or die "Could not open file 'ls.man.bak'";
+foreach my $i (0 .. $#lsArr){
+    say $file2 $lsArr[$i];
+}
+# Close both files.
+close $file;
+close $file2;
+# Open (append) strfry.man.bak and append a line of text.
+open(my $file3, '>>', "ls.man.bak")
+    or die "Could not open file 'ls.man.bak'";
+say $file3 "HERES A NEW LINE";
+# Close the file again.
+close $file3;
+
+#PART 6
+# Add a comment line that shows the start of Part 6.
+
+# Write a function that parses a line of text into an array of strings.
+sub lineParse {
+    my $line = $_[0];
+    my @lineArr = split(' ', $line);
+}
+# Write a function that concatenates an array of strings into a line of text.
+sub strToLine {
+    
+}
+
+# Use the functions to count the words and lines in the file /etc/resolv.conf.

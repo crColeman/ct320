@@ -1,0 +1,15 @@
+#!/bin/bash
+#echo "Non-Root User Processe\n" >> hw2Log
+DATE=`date +"%D %T"`
+echo "DATA FROM: $DATE" >>~/ct320/hw2Log
+NR_PROCESS=`ps -N -u root | wc -l`
+echo "Number of Non-Root Processes: $NR_PROCESS" >>~/ct320/hw2Log
+TOTAL_MEM=`free -m | awk '{print $2}' | head -2 | tail -1 `
+USED_MEM=`free -m | awk '{print $3}' | head -2 | tail -1`
+USED_PERCENT=$(( 100*USED_MEM / TOTAL_MEM ))
+echo "Percentage Used Memory: $USED_PERCENT" >> ~/ct320/hw2Log
+
+NUM_USR=`who | wc -l`
+echo "Number of Users Logged In: $NUM_USR" >> ~/ct320/hw2Log
+echo "------END OF SAMPLE------" >>~/ct320/hw2Log
+echo >>hw2Log
